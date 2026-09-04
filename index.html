@@ -426,12 +426,36 @@ footer a{color:var(--acc);text-decoration:none}
   .nav-links{display:none}
   .burger{display:block}
   .about-grid{grid-template-columns:1fr}
-  .gear{opacity:.22;right:-120px}
   section{padding:80px 22px}
+  .hero{padding-bottom:190px}
+  .gear{opacity:.32;right:50%;translate:50% -50%;top:32%;width:min(76vw,340px)}
+  .hud{inset:8px}
+  .hud i{width:20px;height:20px}
+  .timeline{padding-left:28px}
+  .t-item::before{left:-28px}
+  .marquee-track span{font-size:12px;letter-spacing:2px;padding:0 18px}
+  .marquee-track span b{padding-left:36px}
 }
 @media(max-width:480px){
-  .stats{grid-template-columns:1fr 1fr}
+  .hero{padding-top:104px;padding-bottom:175px}
+  .hero-tag{letter-spacing:2.5px}
+  .hero h1{font-size:clamp(54px,16.5vw,76px)}
+  .hero p{font-size:15.5px;margin-top:24px}
+  .hero-ctas{margin-top:30px;gap:12px}
   .hero-ctas .btn{width:100%;justify-content:center}
+  .race{height:150px}
+  .race .car{width:min(88vw,370px)}
+  .stats{grid-template-columns:1fr 1fr;gap:10px}
+  .stat{padding:18px 14px}
+  .title{margin-bottom:34px}
+  .skill-card{padding:24px 18px}
+  .proj{padding:24px 20px}
+  .c-links{flex-direction:column;align-items:stretch}
+  .c-card{min-width:0;width:100%;align-items:center;text-align:center}
+  .edu{flex-direction:column;align-items:flex-start}
+  .logo{font-size:13.5px;gap:8px}
+  .logo .lg-gear{width:26px;height:26px}
+  footer{justify-content:center;text-align:center}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
