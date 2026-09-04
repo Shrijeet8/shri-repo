@@ -255,8 +255,26 @@ section{padding:110px clamp(20px,6vw,90px);max-width:1240px;margin:0 auto}
   0%{opacity:.7;transform:translate(0,0) scale(.4)}
   100%{opacity:0;transform:translate(-46px,-14px) scale(1.6)}
 }
-.race .flame{animation:flame .18s steps(2) infinite}
+.race .flame{animation:flame .18s steps(2) infinite;transform-origin:right center}
 @keyframes flame{50%{opacity:.25}}
+/* rev mode — click/tap the car */
+.race.rev .wheel{animation-duration:.16s}
+.race.rev .sline{animation-duration:.18s}
+.race.rev .track{animation-duration:.14s}
+.race.rev .track::after{animation-duration:.1s}
+.race.rev .flame{transform:scale(2.1)}
+.race.rev .car{animation:carShake .12s linear infinite}
+@keyframes carShake{
+  0%,100%{transform:translateX(-50%)}
+  25%{transform:translateX(calc(-50% - 1.5px)) translateY(-2.5px)}
+  50%{transform:translateX(-50%) translateY(-4px)}
+  75%{transform:translateX(calc(-50% + 1.5px)) translateY(-1.5px)}
+}
+.hero .rev-hint{
+  position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+  font-family:var(--font-m);font-size:9px;letter-spacing:2.5px;color:rgba(139,147,165,.55);
+  opacity:0;animation:fadeUp 1s 3.6s forwards;pointer-events:none;white-space:nowrap;
+}
 
 /* ---------- site-wide floating gears ---------- */
 .bg-mech{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
@@ -648,6 +666,7 @@ footer a{color:var(--acc);text-decoration:none}
       </svg>
     </div>
   </div>
+  <div class="rev-hint" aria-hidden="true">TAP THE CAR // FULL THROTTLE</div>
 </section>
 
 <!-- ================= MARQUEE ================= -->
@@ -900,7 +919,8 @@ footer a{color:var(--acc);text-decoration:none}
     const v = { pwr: 98.2, rpm: 12400, mpa: 142, temp: 84 };
     setInterval(() => {
       v.pwr  = Math.min(99.9, Math.max(96, v.pwr + (Math.random() - .5) * .6));
-      v.rpm  = Math.round(Math.max(11000, Math.min(13800, v.rpm + (Math.random() - .5) * 500)));
+      v.rpm  = Math.round(Math.max(11000, Math.min(13800, v.rpm + (Math.random() - .5) * 500 + vel * 900)));
+      vel *= .5;
       v.mpa  = Math.round(Math.max(120, Math.min(180, v.mpa + (Math.random() - .5) * 9)));
       v.temp = Math.round(Math.max(70, Math.min(95, v.temp + (Math.random() - .5) * 3)));
       ro.innerHTML = `PWR <b>${v.pwr.toFixed(1)}%</b><br>RPM <b>${v.rpm.toLocaleString('en-IN')}</b><br>STRESS <b>${v.mpa} MPa</b><br>CORE <b>${v.temp}°C</b>`;
@@ -955,11 +975,28 @@ footer a{color:var(--acc);text-decoration:none}
   burger.addEventListener('click', () => toggle(!menu.classList.contains('open')));
   menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => toggle(false)));
 
+  /* JARVIS decrypt effect */
+  const GLYPHS = '!<>-_/[]{}=+*^?#0123456789';
+  const decrypt = el => {
+    const orig = el.textContent;
+    const total = Math.max(14, orig.length * 1.6);
+    let frame = 0;
+    (function tick() {
+      frame++;
+      const done = Math.floor(orig.length * (frame / total));
+      el.textContent = orig.slice(0, done) +
+        [...orig.slice(done)].map(c => c === ' ' ? ' ' : GLYPHS[Math.random() * GLYPHS.length | 0]).join('');
+      if (done < orig.length) requestAnimationFrame(tick);
+      else el.textContent = orig;
+    })();
+  };
+
   /* reveal on scroll (staggered) */
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (!e.isIntersecting) return;
       e.target.classList.add('in');
+      if (!reduce && e.target.classList.contains('kicker')) decrypt(e.target);
       io.unobserve(e.target);
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
@@ -986,9 +1023,55 @@ footer a{color:var(--acc);text-decoration:none}
   }, { threshold: 0.6 });
   document.querySelectorAll('[data-count]').forEach(el => cio.observe(el));
 
-  /* project card tilt + cursor glow */
+  /* car rev — click/tap lower hero */
+  const hero = document.querySelector('.hero');
+  const race = document.querySelector('.race');
+  let revT;
+  hero.addEventListener('click', e => {
+    if (e.target.closest('a,button') || reduce) return;
+    const r = hero.getBoundingClientRect();
+    if (e.clientY - r.top < r.height * 0.55) return;
+    race.classList.add('rev');
+    clearTimeout(revT);
+    revT = setTimeout(() => race.classList.remove('rev'), 2200);
+  });
+
+  /* scroll velocity → RPM boost */
+  let lastY = scrollY, lastT = performance.now(), vel = 0;
+  addEventListener('scroll', () => {
+    const now = performance.now();
+    vel = Math.abs(scrollY - lastY) / Math.max(now - lastT, 1);
+    lastY = scrollY; lastT = now;
+  }, { passive: true });
+
+  /* magnetic buttons + hero parallax (desktop) */
   if (!reduce && matchMedia('(hover:hover)').matches) {
-    document.querySelectorAll('.proj').forEach(card => {
+    document.querySelectorAll('.btn,.c-card').forEach(b => {
+      b.addEventListener('mousemove', e => {
+        const r = b.getBoundingClientRect();
+        const x = (e.clientX - r.left - r.width / 2) / r.width;
+        const y = (e.clientY - r.top - r.height / 2) / r.height;
+        b.style.transform = `translate(${x * 10}px,${y * 8}px)`;
+      });
+      b.addEventListener('mouseleave', () => { b.style.transform = ''; });
+    });
+    const gearSvg = document.querySelector('.gear svg');
+    const heroH1 = hero.querySelector('h1');
+    hero.addEventListener('mousemove', e => {
+      const r = hero.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - .5;
+      const y = (e.clientY - r.top) / r.height - .5;
+      gearSvg.style.transform = `perspective(700px) rotateY(${x * 16}deg) rotateX(${-y * 16}deg)`;
+      heroH1.style.transform = `translate(${x * 10}px,${y * 7}px)`;
+    });
+    hero.addEventListener('mouseleave', () => {
+      gearSvg.style.transform = ''; heroH1.style.transform = '';
+    });
+  }
+
+  /* project + skill card tilt + cursor glow */
+  if (!reduce && matchMedia('(hover:hover)').matches) {
+    document.querySelectorAll('.proj,.skill-card').forEach(card => {
       card.addEventListener('mousemove', e => {
         const r = card.getBoundingClientRect();
         const x = e.clientX - r.left, y = e.clientY - r.top;
