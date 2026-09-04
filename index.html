@@ -300,9 +300,18 @@ section{padding:110px clamp(20px,6vw,90px);max-width:1240px;margin:0 auto}
 
 /* ---------- reveal system ---------- */
 .rv{opacity:0;transform:translateY(36px);transition:opacity .8s cubic-bezier(.19,1,.22,1),transform .8s cubic-bezier(.19,1,.22,1)}
-.rv.in{opacity:1;transform:none}
+.rv.in{opacity:1;transform:none;animation:holoIn .6s steps(1)}
 .rv-l{transform:translateX(-40px)}.rv-r{transform:translateX(40px)}
 .rv-l.in,.rv-r.in{transform:none}
+/* hologram materialize flicker */
+@keyframes holoIn{
+  0%{opacity:.15;filter:brightness(2.2)}
+  28%{opacity:.85;filter:none}
+  42%{opacity:.35;filter:brightness(1.8)}
+  58%,100%{opacity:1;filter:none}
+}
+
+@keyframes holoFloat{50%{translate:0 -6px}}
 
 /* ---------- about ---------- */
 .about-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:60px;align-items:start}
@@ -439,6 +448,33 @@ footer{
 }
 footer a{color:var(--acc);text-decoration:none}
 
+/* ---------- holographic floating panels (Stark HUD) — after base card styles so these win ---------- */
+.stat,.skill-card,.proj,.cert,.edu,.c-card{
+  background:
+    repeating-linear-gradient(0deg,rgba(125,211,252,.035) 0 1px,transparent 1px 3px),
+    linear-gradient(160deg,rgba(125,211,252,.11),rgba(13,18,28,.62) 55%);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(125,211,252,.30);
+  box-shadow:0 0 34px -12px rgba(125,211,252,.4), inset 0 0 30px rgba(125,211,252,.05);
+  clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);
+}
+.stat.gold{
+  background:
+    repeating-linear-gradient(0deg,rgba(255,179,71,.04) 0 1px,transparent 1px 3px),
+    linear-gradient(160deg,rgba(255,90,31,.18),rgba(13,18,28,.62) 55%);
+  border-color:rgba(255,179,71,.42);
+  box-shadow:0 0 34px -12px rgba(255,90,31,.45), inset 0 0 30px rgba(255,90,31,.05);
+}
+.skill-card:hover,.proj:hover{border-color:rgba(255,90,31,.55)}
+.cert:hover,.c-card:hover,.stat:hover{border-color:rgba(125,211,252,.6)}
+.skill-card,.proj,.stat,.cert{animation:holoFloat 7s ease-in-out infinite}
+.skill-card:nth-child(2),.proj:nth-child(2),.stat:nth-child(2),.cert:nth-child(2){animation-delay:1.4s}
+.skill-card:nth-child(3),.proj:nth-child(3),.stat:nth-child(3),.cert:nth-child(3){animation-delay:2.8s}
+.skill-card:nth-child(4),.stat:nth-child(4),.cert:nth-child(4){animation-delay:4.2s}
+.title{text-shadow:0 0 28px rgba(125,211,252,.32)}
+.kicker{text-shadow:0 0 14px rgba(255,90,31,.55)}
+.contact .big{text-shadow:0 0 34px rgba(125,211,252,.3)}
+
 /* ---------- responsive ---------- */
 @media(max-width:860px){
   .nav-links{display:none}
@@ -453,6 +489,7 @@ footer a{color:var(--acc);text-decoration:none}
   .t-item::before{left:-28px}
   .marquee-track span{font-size:12px;letter-spacing:2px;padding:0 18px}
   .marquee-track span b{padding-left:36px}
+  .stat,.skill-card,.proj,.cert,.edu,.c-card{backdrop-filter:none}
 }
 @media(max-width:480px){
   .hero{padding-top:104px;padding-bottom:175px}
@@ -911,6 +948,7 @@ footer a{color:var(--acc);text-decoration:none}
       else setTimeout(() => boot.classList.add('done'), 250);
     })();
     boot.addEventListener('click', () => boot.classList.add('done'));
+    setTimeout(() => boot.classList.add('done'), 3200); // hard fallback (throttled rAF, background tab)
   }
 
   /* live telemetry readout */
